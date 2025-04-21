@@ -73,6 +73,11 @@ class Produto {
     public String obterInformacoesAdicionais() {
         return "Nenhuma informação adicional.";
     }
+    
+    // Setters (Encapsulamento)
+    public void setId(int id) { // Adicionando o setId
+        this.id = id;
+    }
 }
 
 // -------------------- 2. IMPLEMENTAÇÃO DE HERANÇA E HIERARQUIA DE HERANÇA EM JAVA --------------------
