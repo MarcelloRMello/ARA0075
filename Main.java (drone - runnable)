@@ -1,0 +1,88 @@
+import java.util.ArrayList;
+import java.util.List;
+
+// 1. Classe ProcessadorDadosRunnable que implementa a interface Runnable
+class ProcessadorDadosRunnable implements Runnable {
+    private List<String> dadosParaProcessar;
+    private String nomeDrone; // Para identificar qual drone está trabalhando
+
+    // Construtor para receber os dados e o nome do drone
+    public ProcessadorDadosRunnable(List<String> dados, String nome) {
+        this.dadosParaProcessar = dados;
+        this.nomeDrone = nome;
+    }
+
+    @Override
+    public void run() {
+        System.out.println(nomeDrone + " iniciando processamento de " + dadosParaProcessar.size() + " pacotes de dados...");
+        for (int i = 0; i < dadosParaProcessar.size(); i++) {
+            String dadoOriginal = dadosParaProcessar.get(i);
+            // Simula um processamento: converte para maiúsculas e adiciona um prefixo
+            String dadoProcessado = "[" + nomeDrone + "]_PROCESSADO_" + dadoOriginal.toUpperCase();
+            dadosParaProcessar.set(i, dadoProcessado); // Atualiza a lista (neste exemplo, alteramos a mesma lista)
+
+            // Pequena pausa para simular trabalho real e tornar a concorrência mais visível
+            try {
+                Thread.sleep(50); // Pausa de 50 milissegundos
+            } catch (InterruptedException e) {
+                // Captura a exceção se a thread for interrompida enquanto dorme
+                System.out.println(nomeDrone + " foi interrompido!");
+                Thread.currentThread().interrupt(); // Re-interrompe a thread
+                return; // Sai do método run
+            }
+        }
+        System.out.println(nomeDrone + " concluiu o processamento.");
+    }
+}
+
+public class DroneProcessamentoDados {
+
+    public static void main(String[] args) {
+        // Criando uma lista grande de "pacotes de dados"
+        List<String> todosOsDados = new ArrayList<>();
+        for (int i = 1; i <= 20; i++) { // Vamos criar 20 pacotes para este exemplo
+            todosOsDados.add("Pacote-" + i);
+        }
+
+        System.out.println("--- Início da Missão 'Drone de Processamento de Dados' ---");
+        System.out.println("Total de pacotes de dados a processar: " + todosOsDados.size());
+
+        // Dividindo a lista em duas partes
+        int metade = todosOsDados.size() / 2;
+        List<String> dadosDrone1 = todosOsDados.subList(0, metade);
+        List<String> dadosDrone2 = todosOsDados.subList(metade, todosOsDados.size());
+
+        // 2. Criando instâncias de ProcessadorDadosRunnable para cada parte
+        ProcessadorDadosRunnable drone1Runnable = new ProcessadorDadosRunnable(dadosDrone1, "Drone-Alfa");
+        ProcessadorDadosRunnable drone2Runnable = new ProcessadorDadosRunnable(dadosDrone2, "Drone-Beta");
+
+        // 3. Criando as Threads a partir dos Runnables
+        Thread drone1Thread = new Thread(drone1Runnable);
+        Thread drone2Thread = new Thread(drone2Runnable);
+
+        // 4. Iniciando as Threads em paralelo
+        long startTime = System.currentTimeMillis(); // Marca o tempo de início
+        drone1Thread.start();
+        drone2Thread.start();
+
+        // Esperando que ambas as threads terminem a execução
+        try {
+            drone1Thread.join(); // Espera o Drone-Alfa terminar
+            drone2Thread.join(); // Espera o Drone-Beta terminar
+        } catch (InterruptedException e) {
+            System.out.println("A thread principal foi interrompida enquanto esperava os drones.");
+            Thread.currentThread().interrupt();
+        }
+
+        long endTime = System.currentTimeMillis(); // Marca o tempo de fim
+        System.out.println("--- Missão Concluída em " + (endTime - startTime) + " ms ---");
+
+        // Verificando se todos os dados foram processados
+        System.out.println("\n--- Conteúdo Final dos Pacotes de Dados ---");
+        // Nota: Como subList retorna uma 'view' da lista original, 'todosOsDados'
+        // já contém os dados processados pelas threads.
+        for (String dado : todosOsDados) {
+            System.out.println(dado);
+        }
+    }
+}
